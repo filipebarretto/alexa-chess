@@ -1,0 +1,21 @@
+{
+  "name": "serverless-flask",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "aws-sdk": "^2.663.0",
+    "serverless-iam-roles-per-function": "^2.0.2",
+    "serverless-plugin-create-deployment-bucket": "0.0.2",
+    "serverless-pseudo-parameters": "^2.5.0",
+    "serverless-python-requirements": "^5.1.0",
+    "serverless-wsgi": "^1.7.4"
+  },
+  "dependencies": {}
+}
