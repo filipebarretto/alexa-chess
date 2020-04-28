@@ -23,16 +23,30 @@ def get_board_image(game_id, fen, color, lastmove):
     parts = fen.replace("_", " ").split(" ", 1)
     board = chess.BaseBoard("/".join(parts[0].split("/")[0:8]))
     
+    print('Getting white king square')
+    white_king_square = board.king(chess.WHITE)
+    print(white_king_square)
+    print('Getting black attackers of white king square')
+    white_king_attackers = board.attackers(chess.BLACK, white_king_square)
+    print(white_king_attackers)
+    
+    print('Getting black king square')
+    black_king_square = board.king(chess.BLACK)
+    print(black_king_square)
+    print('Getting white attackers of black king square')
+    black_king_attackers = board.attackers(chess.WHITE, black_king_square)
+    print(white_king_attackers)
+    
     size = min(max(int(360), 16), 1024)
     
     css = None
     lastmove = chess.Move.from_uci(lastmove) if lastmove else None
-    check = None
+    check = white_king_square if len(white_king_attackers) > 0 else (black_king_square if len(black_king_attackers) > 0 else None)
     arrows = []
     
     flipped = (color == "black")
     
-    svg_data = chess.svg.board(board, coordinates=False, flipped=flipped, lastmove=lastmove, check=check, arrows=arrows, size=size, style=css)
+    svg_data = chess.svg.board(board, coordinates=True, flipped=flipped, lastmove=lastmove, check=check, arrows=arrows, size=size, style=css)
     png_data = cairosvg.svg2png(bytestring=svg_data)
     
     s3_bucket = os.environ[BOARD_IMAGES_BUCKET]

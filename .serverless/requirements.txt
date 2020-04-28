@@ -1,0 +1,7 @@
+Pillow
+ask_sdk_core
+ask_sdk_model
+boto3
+cairosvg
+python-chess
+requests

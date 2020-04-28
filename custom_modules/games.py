@@ -3,33 +3,29 @@
 import os
 import boto3
 import math
-
-#s3 = boto3.client('s3')
-
-# BOARD DEFAULTS
-
 import requests
 import json
-
 
 from custom_modules import data
 
 
-s3 = boto3.client('s3')
-
-
-CORRESPONDENCE = "correspondence"
+SPEED_CORRESPONDENCE = "correspondence"
 
 MAX_NUM_GAME_LIST = 3
 
+'''
 URL_ACTIVE_GAMES = "https://lichess.org/api/account/playing"
 URL_PLACE_MOVE = "https://lichess.org/api/board/game/{}/move/{}"
+'''
 
+# GETS GAME INFORMATION BY ID
+# REQUESTS ALL GAMES LIST AND RETURNS THE CORRECT GAME
 def get_game_by_id(token, game_id):
     print('Getting ongoing games from Lichess.org')
     hed = {'Authorization': 'Bearer ' + token}
     
-    r = requests.get(url = URL_ACTIVE_GAMES, headers=hed)
+    # REQUEST LIST OF ALL ACTIVE GAMES
+    r = requests.get(url = data.URL_LICHESS_API + data.URL_ACTIVE_GAMES, headers=hed)
     print(r)
     data = r.json()
     print(data)
@@ -40,19 +36,20 @@ def get_game_by_id(token, game_id):
     
     return None, data['nowPlaying']
 
+# LISTS ALL ONGOING GAMES
 def list_ongoing_games(token):
     print('Getting ongoing games from Lichess.org')
     hed = {'Authorization': 'Bearer ' + token}
 
-    # sending get request and saving the response as response object
-    r = requests.get(url = URL_ACTIVE_GAMES, headers=hed)
+    # REQUEST LIST OF ALL ACTIVE GAMES
+    r = requests.get(url = data.URL_LICHESS_API + data.URL_ACTIVE_GAMES, headers=hed)
     print(r)
     data = r.json()
     print(data)
     
     return data['nowPlaying']
     
-
+# PREPARES RESPONSE FORMAT WITH LISTS OF OPPONENTS
 def get_ongoing_games_opponents_response(ongoing_games_dict):
     print('Preparing active games opponents response')
     ongoing_games_opponents_response = ''
@@ -65,14 +62,14 @@ def get_ongoing_games_opponents_response(ongoing_games_dict):
             ongoing_games_opponents_response += 'game {}, against '.format(key) + game['opponent']['username'] + (', ' if (key < len(ongoing_games_dict.items()) and key != MAX_NUM_GAME_LIST) else '. ')
 
     print(ongoing_games_opponents_response)
-
     return ongoing_games_opponents_response
 
 
+# FORMATS THE LIST OF ONGOING GAMES TO DISPLAY TO USER
 def get_ongoing_games_list(ongoing_games_dict):
     response = ''
     for key, game in ongoing_games_dict.items():
-        response += '- Game {}, against {} ({})\n'.format(key, game['opponent']['username'], game['color'])
+        response += (data.LIST_GAMES_ITEM).format(key, game['opponent']['username'], game['color']) + (data.LIST_GAMES_ITEM_PLAYER_TURN if game['isMyTurn'] else '') + '\n'
     return response
 
 
@@ -89,7 +86,7 @@ def get_ongoing_games_response(ongoing_games):
     ongoing_games_dict = {}
     
     for game in ongoing_games:
-        if game['speed'] == CORRESPONDENCE:
+        if game['speed'] == SPEED_CORRESPONDENCE:
             active_correspondence_games += 1
             ongoing_games_dict[active_correspondence_games] = game
             player_turn += 1 if game['isMyTurn'] else 0
@@ -116,21 +113,21 @@ def place_move(token, game_id, move):
     print('Placing move {} in game {}'.format(move, game_id))
     hed = {'Authorization': 'Bearer ' + token}
     
-    url = URL_PLACE_MOVE.format(game_id, move)
+    url = data.URL_ACTIVE_GAMES + (data.URL_PLACE_MOVE).format(game_id, move)
     print(url)
     # sending get request and saving the response as response object
-    r = requests.post(url = url, headers=hed)
+    r = (requests.post(url = url, headers=hed)).json()
     print(r)
-    data = r.json()
-    print(data)
+    #data = r.json()
+    #print(data)
     
     response = {}
-    if data.get('ok'):
-        response = {'status': True, 'message': (data.MOVE_PLACE_SUCCESS).format(move) + data.DETAILS_IN_ANOTHER_GAME_QUESTION}
+    if r.get('ok'):
+        response = {'status': True, 'message': (data.PLACE_MOVE_SUCCESS).format(move) + data.DETAILS_IN_ANOTHER_GAME_QUESTION}
         print(response)
         return response
     else:
-        response = {'status': False, 'message': data.get('error')}
+        response = {'status': False, 'message': r.get('error')}
         print(response)
         return response
 

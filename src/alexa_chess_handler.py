@@ -4,6 +4,7 @@ import json
 import logging
 import boto3
 import random
+import datetime
 
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.handler_input import HandlerInput
@@ -21,7 +22,7 @@ from ask_sdk_model.interfaces.display import (
 from ask_sdk_model import ui, Response
 
 
-from custom_modules import data, games, board
+from custom_modules import data, games, board, account, ratings
 
 
 # Skill Builder object
@@ -55,8 +56,33 @@ class LaunchRequestHandler(AbstractRequestHandler):
         
         attr['state'] = STATE_LAUNCHING
         
-        response_builder.speak(data.WELCOME_MESSAGE).ask(data.HELP_MESSAGE)
-        return handler_input.response_builder.response
+        user_info = handler_input.request_envelope.session.user
+        user_info = user_info.to_dict()
+        
+        print(user_info)
+        print(handler_input.request_envelope.request.locale)
+        # en-US
+        
+        if 'access_token' in user_info:
+        
+            access_token = handler_input.request_envelope.session.user.access_token
+            
+            # GETS THE USERNAME FROM LICHESS.ORG
+            firstname = account.get_username(access_token)
+            rsp = (data.WELCOME_MESSAGE).format(firstname)
+            
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+        
+            response_builder.speak(rsp).ask(rand.choice(data.CHOOSE_ACTION))
+            return handler_input.response_builder.response
+        else:
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            return response_builder.response
 
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
@@ -133,8 +159,11 @@ class ListMyTurnOngoingGamesHandler(AbstractRequestHandler):
             response_builder.speak(rsp)
             return response_builder.response
         else:
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(data.ERROR_ACCESS_TOKEN)
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 '''
 
@@ -176,8 +205,11 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
             response_builder.speak(rsp_speak).ask(rsp_speak)
             return response_builder.response
         else:
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(data.ERROR_ACCESS_TOKEN)
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -264,9 +296,12 @@ class GetGameDetailsHandler(AbstractRequestHandler):
                 attr['state'] = STATE_PLACE_MOVE
                 response_builder.speak(rsp).ask(rsp)
             else:
-                rsp += data.DETAILS_IN_ANOTHER_GAME_QUESTION + '\n\n'
+                ts = datetime.datetime.now().timestamp()
+                rand = random.Random(int(ts))
+            
+                rsp += rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
                 attr['state'] = STATE_ANOTHER_GAME_DETAILS
-                response_builder.speak(rsp)
+                response_builder.speak(rsp).ask(rsp)
             
             response_builder.set_card(ui.StandardCard(
                                                       title = (data.GAME_DETAILS_CARD_TITLE).format(game_details['opponent']['username']),
@@ -276,8 +311,11 @@ class GetGameDetailsHandler(AbstractRequestHandler):
             return response_builder.response
             
         else:
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(data.ERROR_ACCESS_TOKEN)
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -296,7 +334,7 @@ class ChooseMoveHandler(AbstractRequestHandler):
         game_details = attr['active_game']
         board_image = board.get_board_image(game_details['gameId'], game_details['fen'], game_details['color'], game_details['lastMove'])
         
-        rsp += data.CHOOSE_MOVE_QUESTION
+        rsp = data.CHOOSE_MOVE_QUESTION
         
         # TODO: PLACE MOVE HISTORY IN CARD
         response_builder.set_card(ui.StandardCard(
@@ -321,7 +359,10 @@ class CancelPlaceMoveHandler(AbstractRequestHandler):
         
         all_ongoing_games = attr['all_ongoing_games']
         
-        rsp = data.OK + data.DETAILS_IN_ANOTHER_GAME_QUESTION + '\n\n'
+        ts = datetime.datetime.now().timestamp()
+        rand = random.Random(int(ts))
+        
+        rsp = data.OK + rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
         attr['state'] = STATE_ANOTHER_GAME_DETAILS
     
         response_builder.set_card(ui.StandardCard(
@@ -334,7 +375,7 @@ class CancelPlaceMoveHandler(AbstractRequestHandler):
 
 class PlaceMoveHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
-        return is_intent_name("place_move_handler")(handler_input)
+        return is_intent_name("place_move")(handler_input)
     
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
@@ -387,7 +428,10 @@ class PlaceMoveHandler(AbstractRequestHandler):
     
             else:
                 
-                rsp = data.PLACE_MOVE_NOT_YOUR_TURN + DETAILS_IN_ANOTHER_GAME_QUESTION
+                ts = datetime.datetime.now().timestamp()
+                rand = random.Random(int(ts))
+        
+                rsp = data.PLACE_MOVE_NOT_YOUR_TURN + rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION)
                 
                 rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games)
                 attr['all_ongoing_games'] = all_ongoing_games
@@ -404,10 +448,94 @@ class PlaceMoveHandler(AbstractRequestHandler):
                 return response_builder.response
         
         else:
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(data.ERROR_ACCESS_TOKEN)
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
+
+
+# RATINGS HANDLERS
+class UserRatingHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("get_user_ratings")(handler_input)
+    
+    def handle(self, handler_input):
+        logger.info("In UserRatingHandler")
+        attr = handler_input.attributes_manager.session_attributes
+        response_builder = handler_input.response_builder
+        
+        attr['state'] = ''
+        
+        user_info = handler_input.request_envelope.session.user
+        user_info = user_info.to_dict()
+        
+        if 'access_token' in user_info:
+            
+            access_token = handler_input.request_envelope.session.user.access_token
+            
+            # GETS THE USERNAME FROM LICHESS.ORG
+            resp_speak, resp_card = ratings.get_user_ratings(access_token)
+            
+            response_builder.set_card(ui.StandardCard(
+                                                      title = data.USER_RATINGS_CARD_TITLE,
+                                                      text = resp_card))
+            
+            response_builder.speak(resp_speak)
+            return handler_input.response_builder.response
+        else:
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            return response_builder.response
+
+
+class UserRatingInSpeedHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("get_user_rating_in_speed")(handler_input)
+    
+    def handle(self, handler_input):
+        logger.info("In UserRatingHandler")
+        attr = handler_input.attributes_manager.session_attributes
+        response_builder = handler_input.response_builder
+        
+        attr['state'] = ''
+        
+        print('Getting slots...')
+        slots = handler_input.request_envelope.request.intent.slots
+        print(slots)
+        
+        game_speed = slots["game_speed"].resolutions.resolutions_per_authority[0].values[0].value.id
+        print("Game Speed: " +  game_speed)
+        
+        user_info = handler_input.request_envelope.session.user
+        user_info = user_info.to_dict()
+        
+        if 'access_token' in user_info:
+            
+            access_token = handler_input.request_envelope.session.user.access_token
+            
+            # GETS THE USERNAME FROM LICHESS.ORG
+            resp_speak, resp_card = ratings.get_user_ratings_in_speed(access_token, game_speed)
+            
+            response_builder.set_card(ui.StandardCard(
+                                                      title = (data.RATING_IN_SPEED_CARD_TITLE).format(game_speed),
+                                                      text = resp_card))
+                
+            response_builder.speak(resp_speak)
+            return handler_input.response_builder.response
+              
+        else:
+            ts = datetime.datetime.now().timestamp()
+            rand = random.Random(int(ts))
+            
+            print(rand.choice(data.ERROR_ACCESS_TOKEN))
+            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            return response_builder.response
 
 
 class RepeatHandler(AbstractRequestHandler):
@@ -427,7 +555,7 @@ class RepeatHandler(AbstractRequestHandler):
                                                               cached_response_str, Response)
             return cached_response
         else:
-            response_builder.speak(data.FALLBACK_ANSWER).ask(data.HELP_MESSAGE)
+            response_builder.speak(data.FALLBACK_ANSWER).ask(data.FALLBACK_ANSWER)
             
             return response_builder.response
 
@@ -445,7 +573,7 @@ class FallbackIntentHandler(AbstractRequestHandler):
         # type: (HandlerInput) -> Response
         logger.info("In FallbackIntentHandler")
         handler_input.response_builder.speak(
-                                             data.FALLBACK_ANSWER).ask(data.HELP_MESSAGE)
+                                             data.FALLBACK_ANSWER).ask(data.FALLBACK_ANSWER)
                                              
         return handler_input.response_builder.response
 
@@ -522,6 +650,8 @@ sb.add_request_handler(PlaceMoveHandler())
 sb.add_request_handler(CancelPlaceMoveHandler())
 sb.add_request_handler(ChooseMoveHandler())
 
+sb.add_request_handler(UserRatingHandler())
+sb.add_request_handler(UserRatingInSpeedHandler())
 
 # Add exception handler to the skill.
 sb.add_exception_handler(CatchAllExceptionHandler())
