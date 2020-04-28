@@ -1,0 +1,842 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "lee chess",
+            "modelConfiguration": {
+                "fallbackIntentSensitivity": {
+                    "level": "LOW"
+                }
+            },
+            "intents": [
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                },
+                {
+                    "name": "place_move",
+                    "slots": [
+                        {
+                            "name": "dest_square",
+                            "type": "BOARD_SQUARES"
+                        },
+                        {
+                            "name": "orig_square",
+                            "type": "BOARD_SQUARES"
+                        }
+                    ],
+                    "samples": [
+                        "yes. {orig_square} takes on {dest_square}",
+                        "yes. move {orig_square} to {dest_square}",
+                        "move {orig_square} to {dest_square}",
+                        "{orig_square} takes on {dest_square}",
+                        "{orig_square} to {dest_square}"
+                    ]
+                },
+                {
+                    "name": "list_all_ongoing_games",
+                    "slots": [],
+                    "samples": [
+                        "list my active games",
+                        "list active games",
+                        "list my games",
+                        "list ongoing games",
+                        "list games"
+                    ]
+                },
+                {
+                    "name": "list_my_turn_ongoing_games",
+                    "slots": [],
+                    "samples": [
+                        "list games in my turn to play",
+                        "list games in my turn",
+                        "list games where it is my turn"
+                    ]
+                },
+                {
+                    "name": "get_game_details",
+                    "slots": [
+                        {
+                            "name": "game_number",
+                            "type": "AMAZON.NUMBER"
+                        }
+                    ],
+                    "samples": [
+                        "yes. give me details in game {game_number}",
+                        "yes. details in game {game_number}",
+                        "yes. game {game_number}",
+                        "get details in game number {game_number}",
+                        "get details in game {game_number}"
+                    ]
+                },
+                {
+                    "name": "AMAZON.YesIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NoIntent",
+                    "samples": []
+                },
+                {
+                    "name": "get_user_ratings",
+                    "slots": [],
+                    "samples": [
+                        "what are my ratings",
+                        "what is my rating"
+                    ]
+                },
+                {
+                    "name": "get_user_rating_in_speed",
+                    "slots": [
+                        {
+                            "name": "game_speed",
+                            "type": "GAME_SPEEDS"
+                        }
+                    ],
+                    "samples": [
+                        "what is my rating in {game_speed}",
+                        "what are my ratings in {game_speed}"
+                    ]
+                }
+            ],
+            "types": [
+                {
+                    "name": "CHESS_PIECES",
+                    "values": [
+                        {
+                            "name": {
+                                "value": "pawn"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "king"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "queen"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "knight"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "bishop"
+                            }
+                        },
+                        {
+                            "name": {
+                                "value": "rook"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "BOARD_SQUARES",
+                    "values": [
+                        {
+                            "id": "h8",
+                            "name": {
+                                "value": "h8",
+                                "synonyms": [
+                                    "h eight",
+                                    "h 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h7",
+                            "name": {
+                                "value": "h7",
+                                "synonyms": [
+                                    "h seven",
+                                    "h 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h6",
+                            "name": {
+                                "value": "h6",
+                                "synonyms": [
+                                    "h six",
+                                    "h 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h5",
+                            "name": {
+                                "value": "h5",
+                                "synonyms": [
+                                    "h five",
+                                    "h 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h4",
+                            "name": {
+                                "value": "h4",
+                                "synonyms": [
+                                    "h four",
+                                    "h 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h3",
+                            "name": {
+                                "value": "h3",
+                                "synonyms": [
+                                    "h three",
+                                    "h 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h2",
+                            "name": {
+                                "value": "h2",
+                                "synonyms": [
+                                    "h two",
+                                    "h 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "h1",
+                            "name": {
+                                "value": "h1",
+                                "synonyms": [
+                                    "h one",
+                                    "h 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g8",
+                            "name": {
+                                "value": "g8",
+                                "synonyms": [
+                                    "g eight",
+                                    "g 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g7",
+                            "name": {
+                                "value": "g7",
+                                "synonyms": [
+                                    "g seven",
+                                    "g 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g6",
+                            "name": {
+                                "value": "g6",
+                                "synonyms": [
+                                    "g six",
+                                    "g 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g5",
+                            "name": {
+                                "value": "g5",
+                                "synonyms": [
+                                    "g five",
+                                    "g 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g4",
+                            "name": {
+                                "value": "g4",
+                                "synonyms": [
+                                    "g four",
+                                    "g 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g3",
+                            "name": {
+                                "value": "g3",
+                                "synonyms": [
+                                    "g three",
+                                    "g 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g2",
+                            "name": {
+                                "value": "g2",
+                                "synonyms": [
+                                    "g two",
+                                    "g 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "g1",
+                            "name": {
+                                "value": "g1",
+                                "synonyms": [
+                                    "g one",
+                                    "g 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f8",
+                            "name": {
+                                "value": "f8",
+                                "synonyms": [
+                                    "f eight",
+                                    "f 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f7",
+                            "name": {
+                                "value": "f7",
+                                "synonyms": [
+                                    "f seven",
+                                    "f 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f6",
+                            "name": {
+                                "value": "f6",
+                                "synonyms": [
+                                    "f six",
+                                    "f 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f5",
+                            "name": {
+                                "value": "f5",
+                                "synonyms": [
+                                    "f five",
+                                    "f 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f4",
+                            "name": {
+                                "value": "f4",
+                                "synonyms": [
+                                    "f four",
+                                    "f 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f3",
+                            "name": {
+                                "value": "f3",
+                                "synonyms": [
+                                    "f three",
+                                    "f 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f2",
+                            "name": {
+                                "value": "f2",
+                                "synonyms": [
+                                    "f two",
+                                    "f 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "f1",
+                            "name": {
+                                "value": "f1",
+                                "synonyms": [
+                                    "f one",
+                                    "f 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e8",
+                            "name": {
+                                "value": "e8",
+                                "synonyms": [
+                                    "e eight",
+                                    "e 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e7",
+                            "name": {
+                                "value": "e7",
+                                "synonyms": [
+                                    "e 7",
+                                    "e seven"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e6",
+                            "name": {
+                                "value": "e6",
+                                "synonyms": [
+                                    "e 6",
+                                    "e six"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e5",
+                            "name": {
+                                "value": "e5",
+                                "synonyms": [
+                                    "e five",
+                                    "e 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e4",
+                            "name": {
+                                "value": "e4",
+                                "synonyms": [
+                                    "e four",
+                                    "e 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e3",
+                            "name": {
+                                "value": "e3",
+                                "synonyms": [
+                                    "e three",
+                                    "e 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e2",
+                            "name": {
+                                "value": "e2",
+                                "synonyms": [
+                                    "e two",
+                                    "e 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "e1",
+                            "name": {
+                                "value": "e1",
+                                "synonyms": [
+                                    "e one",
+                                    "e 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d8",
+                            "name": {
+                                "value": "d8",
+                                "synonyms": [
+                                    "d eight",
+                                    "d 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d7",
+                            "name": {
+                                "value": "d7",
+                                "synonyms": [
+                                    "d seven",
+                                    "d 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d6",
+                            "name": {
+                                "value": "d6",
+                                "synonyms": [
+                                    "d six",
+                                    "d 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d5",
+                            "name": {
+                                "value": "d5",
+                                "synonyms": [
+                                    "d five",
+                                    "d 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d4",
+                            "name": {
+                                "value": "d4",
+                                "synonyms": [
+                                    "d four",
+                                    "d 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d3",
+                            "name": {
+                                "value": "d3",
+                                "synonyms": [
+                                    "d three",
+                                    "d 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d2",
+                            "name": {
+                                "value": "d2",
+                                "synonyms": [
+                                    "d two",
+                                    "d 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "d1",
+                            "name": {
+                                "value": "d1",
+                                "synonyms": [
+                                    "d one",
+                                    "d 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c8",
+                            "name": {
+                                "value": "c8",
+                                "synonyms": [
+                                    "c eight",
+                                    "c 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c7",
+                            "name": {
+                                "value": "c7",
+                                "synonyms": [
+                                    "c seven",
+                                    "c 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c6",
+                            "name": {
+                                "value": "c6",
+                                "synonyms": [
+                                    "c six",
+                                    "c 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c5",
+                            "name": {
+                                "value": "c5",
+                                "synonyms": [
+                                    "c five",
+                                    "c 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c4",
+                            "name": {
+                                "value": "c4",
+                                "synonyms": [
+                                    "c four",
+                                    "c 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c3",
+                            "name": {
+                                "value": "c3",
+                                "synonyms": [
+                                    "c three",
+                                    "c 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c2",
+                            "name": {
+                                "value": "c2",
+                                "synonyms": [
+                                    "c two",
+                                    "c 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "c1",
+                            "name": {
+                                "value": "c1",
+                                "synonyms": [
+                                    "c one",
+                                    "c 1"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b8",
+                            "name": {
+                                "value": "b8",
+                                "synonyms": [
+                                    "b 8",
+                                    "b eight"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b7",
+                            "name": {
+                                "value": "b7",
+                                "synonyms": [
+                                    "b 7",
+                                    "b seven"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b6",
+                            "name": {
+                                "value": "b6",
+                                "synonyms": [
+                                    "b six",
+                                    "b 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b5",
+                            "name": {
+                                "value": "b5",
+                                "synonyms": [
+                                    "b five",
+                                    "b 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b4",
+                            "name": {
+                                "value": "b4",
+                                "synonyms": [
+                                    "b four",
+                                    "b 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b3",
+                            "name": {
+                                "value": "b3",
+                                "synonyms": [
+                                    "b three",
+                                    "b 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b2",
+                            "name": {
+                                "value": "b2",
+                                "synonyms": [
+                                    "b two",
+                                    "b 2"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "b1",
+                            "name": {
+                                "value": "b1",
+                                "synonyms": [
+                                    "b one",
+                                    "b 1 "
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a8",
+                            "name": {
+                                "value": "a8",
+                                "synonyms": [
+                                    "a eight",
+                                    "a 8"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a7",
+                            "name": {
+                                "value": "a7",
+                                "synonyms": [
+                                    "a seven",
+                                    "a 7"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a6",
+                            "name": {
+                                "value": "a6",
+                                "synonyms": [
+                                    "a six",
+                                    "a 6"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a5",
+                            "name": {
+                                "value": "a5",
+                                "synonyms": [
+                                    "a five",
+                                    "a 5"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a4",
+                            "name": {
+                                "value": "a4",
+                                "synonyms": [
+                                    "a four",
+                                    "a 4"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a3",
+                            "name": {
+                                "value": "a3",
+                                "synonyms": [
+                                    "a three",
+                                    "a 3"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a2",
+                            "name": {
+                                "value": "a2",
+                                "synonyms": [
+                                    "a 2",
+                                    "a two"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "a1",
+                            "name": {
+                                "value": "a1",
+                                "synonyms": [
+                                    "a 1",
+                                    "a one"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GAME_SPEEDS",
+                    "values": [
+                        {
+                            "id": "rapid",
+                            "name": {
+                                "value": "rapid"
+                            }
+                        },
+                        {
+                            "id": "classical",
+                            "name": {
+                                "value": "classical"
+                            }
+                        },
+                        {
+                            "id": "correspondence",
+                            "name": {
+                                "value": "correspondence"
+                            }
+                        },
+                        {
+                            "id": "bullet",
+                            "name": {
+                                "value": "bullet"
+                            }
+                        },
+                        {
+                            "id": "puzzle",
+                            "name": {
+                                "value": "puzzle"
+                            }
+                        },
+                        {
+                            "id": "blitz",
+                            "name": {
+                                "value": "blitz"
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}
