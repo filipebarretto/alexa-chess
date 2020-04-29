@@ -10,7 +10,7 @@ import json
 from custom_modules import data
 
 
-
+# TODO: CHECK IF HAS NAME, ELSE USERNAME
 def get_username(token):
     print('Getting user account information from Lichess.org')
     hed = {'Authorization': 'Bearer ' + token}
@@ -20,8 +20,10 @@ def get_username(token):
     req = requests.get(url = url, headers=hed)
     r = req.json()
     print(r)
-    print(r['profile']['firstName'])
-    return r['profile']['firstName']
+    #    print(r['profile']['firstName'])
+    #    return r['profile']['firstName']
+    print(r['username'])
+    return r['username']
 
 
 

@@ -88,7 +88,7 @@
       "Properties": {
         "Code": {
           "S3Bucket": "456348640761-alexa-chess-dev",
-          "S3Key": "serverless/alexa-chess/dev/1588089236794-2020-04-28T15:53:56.794Z/alexa-chess.zip"
+          "S3Key": "serverless/alexa-chess/dev/1588128661838-2020-04-29T02:51:01.838Z/alexa-chess.zip"
         },
         "FunctionName": "alexa-chess-dev-alexa_chess_handler",
         "Handler": "src/alexa_chess_handler.lambda_handler",
@@ -114,14 +114,14 @@
         "AlexaUnderscorechessUnderscorehandlerLogGroup"
       ]
     },
-    "AlexaUnderscorechessUnderscorehandlerLambdaVersionmDlN6xc8eRzTnID5A9VLBOZieG2irWGDyxpz6WPEQg": {
+    "AlexaUnderscorechessUnderscorehandlerLambdaVersion3UlDr8hS7HRmzyI9dMZGdCxKft5lLv23x3E9WT4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaFunction"
         },
-        "CodeSha256": "JBGJ5WaalXfPoXKEoFI8/bpFoD2OwKrtf9ZjF1xGpB0=",
+        "CodeSha256": "ctJDekVRDerHZS+lLmSJTk4bmOSWEMQtVGiWC5+RQh0=",
         "Description": "Controls Alexa responses for Alexa Chess"
       }
     },
@@ -253,7 +253,7 @@
     "AlexaUnderscorechessUnderscorehandlerLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaVersionmDlN6xc8eRzTnID5A9VLBOZieG2irWGDyxpz6WPEQg"
+        "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaVersion3UlDr8hS7HRmzyI9dMZGdCxKft5lLv23x3E9WT4"
       }
     }
   }

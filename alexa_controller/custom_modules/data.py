@@ -2,10 +2,11 @@
 
 import random
 
-URL_LICHESS_API = 'https://lichess.org/api/'
-URL_ACTIVE_GAMES = 'account/playing'
-URL_PLACE_MOVE = 'board/game/{}/move/{}'
-URL_ACCOUNT = 'account'
+URL_LICHESS_API = 'https://lichess.org/'
+URL_ACTIVE_GAMES = 'api/account/playing'
+URL_SINGLE_GAME = 'game/export/{}'
+URL_PLACE_MOVE = 'api/board/game/{}/move/{}'
+URL_ACCOUNT = 'api/account'
 
 
 WELCOME_MESSAGE = ("Hello, {}! Welcome to Alexa Chess. Here, you can play games on Lichess.org. What would you like to do?")
@@ -29,7 +30,7 @@ USER_RATINGS_TITLE = "User Ratings"
 # ERROR MESSAGES
 ERROR_MESSAGE = ("We had a problem. Please try again later. ")
 ERROR_ACCESS_TOKEN = "Error retrieving access token"
-ERROR_ACCESS_TOKEN_SPEAK = random.choice(["We had an error retrieving your access token.", "Error retrieving access token"])
+ERROR_ACCESS_TOKEN_SPEAK = ["We had an error retrieving your access token.", "Error retrieving access token"]
 
 
 MOVE_PIECE_RESPONSE = "Moving piece {} to {}."

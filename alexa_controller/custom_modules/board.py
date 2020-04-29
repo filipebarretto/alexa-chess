@@ -6,6 +6,7 @@ import math
 import requests
 import json
 
+import io
 import chess
 import chess.svg
 import cairosvg
@@ -17,11 +18,26 @@ s3 = boto3.client('s3')
 BOARD_IMAGES_BUCKET = "BOARD_IMAGES_BUCKET"
 
 
+#_details['id'], game_details['fen'], game_details['color'], game_details['lastMove']
+
 # GENERATES BOARD IMAGE
-def get_board_image(game_id, fen, color, lastmove):
+def get_board_image(game, username):
     print("Getting board image...")
+    
+    '''
     parts = fen.replace("_", " ").split(" ", 1)
     board = chess.BaseBoard("/".join(parts[0].split("/")[0:8]))
+    '''
+    print('Generating board image...')
+    pgn = io.StringIO(game['moves'])
+    g = chess.pgn.read_game(pgn)
+    print(g)
+    board = g.board()
+    for move in g.mainline_moves():
+        board.push(move)
+
+    print(board)
+    #fen = board.fen()
     
     print('Getting white king square')
     white_king_square = board.king(chess.WHITE)
@@ -40,17 +56,19 @@ def get_board_image(game_id, fen, color, lastmove):
     size = min(max(int(360), 16), 1024)
     
     css = None
-    lastmove = chess.Move.from_uci(lastmove) if lastmove else None
+    #lastmove = chess.Move.from_uci(lastmove) if lastmove else None
+    lastmove = board.peek()
+    print(lastmove)
     check = white_king_square if len(white_king_attackers) > 0 else (black_king_square if len(black_king_attackers) > 0 else None)
     arrows = []
     
-    flipped = (color == "black")
+    flipped = (game['players']['black']['user']['name'] == username)
     
     svg_data = chess.svg.board(board, coordinates=True, flipped=flipped, lastmove=lastmove, check=check, arrows=arrows, size=size, style=css)
     png_data = cairosvg.svg2png(bytestring=svg_data)
     
     s3_bucket = os.environ[BOARD_IMAGES_BUCKET]
-    obj_key = game_id + ".png"
+    obj_key = game['id'] + ".png"
     
     response = s3.put_object(Body=png_data, Bucket=s3_bucket, Key=obj_key)
     print(response)

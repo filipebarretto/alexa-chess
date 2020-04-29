@@ -56,9 +56,9 @@ class LaunchRequestHandler(AbstractRequestHandler):
         
         attr['state'] = STATE_LAUNCHING
         
+        
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
-        
         print(user_info)
         print(handler_input.request_envelope.request.locale)
         # en-US
@@ -68,9 +68,13 @@ class LaunchRequestHandler(AbstractRequestHandler):
             access_token = handler_input.request_envelope.session.user.access_token
             
             # GETS THE USERNAME FROM LICHESS.ORG
-            firstname = account.get_username(access_token)
-            rsp = (data.WELCOME_MESSAGE).format(firstname)
+            # TODO: CHECK IF HAS NAME, ELSE USERNAME
+            #            firstname = account.get_username(access_token)
+            #            rsp = (data.WELCOME_MESSAGE).format(firstname)
             
+            username = account.get_username(access_token)
+            rsp = (data.WELCOME_MESSAGE).format(username)
+
             ts = datetime.datetime.now().timestamp()
             rand = random.Random(int(ts))
         
@@ -239,7 +243,7 @@ class DetailsInAnotherGameHandler(AbstractRequestHandler):
 class CancelGameDetailsHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         attr = handler_input.attributes_manager.session_attributes
-        return is_intent_name("AMAZON.NoIntent")(handler_input) and (attr.get('state') == STATE_LIST_ALL_ONGOING_GAMES or attr.get('state') == STATE_PLACING_MOVE)
+        return is_intent_name("AMAZON.NoIntent")(handler_input) and (attr.get('state') == STATE_LIST_ALL_ONGOING_GAMES or attr.get('state') == STATE_PLACING_MOVE or attr.get('state') == STATE_ANOTHER_GAME_DETAILS)
     
     def handle(self, handler_input):
         logger.info("In CancelGameDetailsHandler")
@@ -278,18 +282,19 @@ class GetGameDetailsHandler(AbstractRequestHandler):
         all_ongoing_games = attr['all_ongoing_games']
         print(all_ongoing_games)
         
-        print('game_details')
-        game_details = all_ongoing_games[game_number]
-        print(game_details)
-        attr['active_game'] = game_details
-
         if 'access_token' in user_info:
             access_token = handler_input.request_envelope.session.user.access_token
             
-            # BUILD ALEXA RESPONSE
-            rsp, my_turn = games.get_game_details_response(game_details)
+            username = account.get_username(access_token)
+            print('Getting game details')
+            game_details = games.get_game_by_id(access_token, all_ongoing_games[game_number]['gameId'])
+            attr['active_game'] = game_details
             
-            board_image = board.get_board_image(game_details['gameId'], game_details['fen'], game_details['color'], game_details['lastMove'])
+            # BUILD ALEXA RESPONSE
+            rsp, my_turn = games.get_game_details_response(game_details, username)
+            
+            username = account.get_username(access_token)
+            board_image = board.get_board_image(game_details, username)
             
             if my_turn:
                 rsp += data.IS_USER_TURN + data.PLACE_A_MOVE_QUESTION
@@ -304,7 +309,7 @@ class GetGameDetailsHandler(AbstractRequestHandler):
                 response_builder.speak(rsp).ask(rsp)
             
             response_builder.set_card(ui.StandardCard(
-                                                      title = (data.GAME_DETAILS_CARD_TITLE).format(game_details['opponent']['username']),
+                                                      title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game_details, username)),
                                                       text = rsp if my_turn else rsp + games.get_ongoing_games_list(all_ongoing_games),
                                                       image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
             
@@ -338,7 +343,7 @@ class ChooseMoveHandler(AbstractRequestHandler):
         
         # TODO: PLACE MOVE HISTORY IN CARD
         response_builder.set_card(ui.StandardCard(
-                                                  title = (data.GAME_DETAILS_CARD_TITLE).format(game_details['opponent']['username']),
+                                                  title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game, username)),
                                                   text = rsp,
                                                   image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                                                   
@@ -410,14 +415,15 @@ class PlaceMoveHandler(AbstractRequestHandler):
                 print(response)
                 rsp = response['message']
                 
-                game, ongoing_games = games.get_game_by_id(access_token, active_game['gameId'])
+                username = account.get_username(access_token)
+                game = games.get_game_by_id(access_token, active_game['gameId'])
                 
                 rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games)
                 attr['all_ongoing_games'] = all_ongoing_games
                 
                 response_builder.speak(rsp).ask(rsp)
                 
-                board_image = board.get_board_image(game['gameId'], game['fen'], game['color'], game['lastMove'])
+                board_image = board.get_board_image(game, username)
             
                 response_builder.set_card(ui.StandardCard(
                                                           title = (data.GAME_DETAILS_CARD_TITLE).format(game['opponent']['username']),

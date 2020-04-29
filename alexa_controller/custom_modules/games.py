@@ -5,6 +5,13 @@ import boto3
 import math
 import requests
 import json
+import io
+
+import random
+import datetime
+
+import chess
+import chess.pgn
 
 from custom_modules import data
 
@@ -18,23 +25,57 @@ URL_ACTIVE_GAMES = "https://lichess.org/api/account/playing"
 URL_PLACE_MOVE = "https://lichess.org/api/board/game/{}/move/{}"
 '''
 
-# GETS GAME INFORMATION BY ID
-# REQUESTS ALL GAMES LIST AND RETURNS THE CORRECT GAME
+
+
+# GETS SINGLE GAME INFORMATION BY ID
 def get_game_by_id(token, game_id):
+    
+    #game_id = 'S27aJ3x6'
     print('Getting ongoing games from Lichess.org')
-    hed = {'Authorization': 'Bearer ' + token}
+    hed = {'Authorization': 'Bearer ' + token, 'Accept': 'application/json'}
+    print(hed)
+    params = {'pgnInJson': 'false', 'opening': 'true'}
+    print(params)
     
+    url = data.URL_LICHESS_API + (data.URL_SINGLE_GAME).format(game_id)
+    print(url)
     # REQUEST LIST OF ALL ACTIVE GAMES
-    r = requests.get(url = data.URL_LICHESS_API + data.URL_ACTIVE_GAMES, headers=hed)
-    print(r)
-    data = r.json()
-    print(data)
+    req = requests.get(url = url, headers=hed, params=params)
+    print(req)
+    print(req.content)
+    game = req.json()
+    print(game)
     
-    for game in data['nowPlaying']:
-        if game_id == game['gameId']:
-            return game, data['nowPlaying']
-    
-    return None, data['nowPlaying']
+    return game
+
+
+def get_opponent_username(game, username):
+    return game['players']['white']['user']['name'] if (game['players']['black']['user']['name'] == username) else game['players']['black']['user']['name']
+
+def get_opponent_rating(game, username):
+    return game['players']['white']['rating'] if (game['players']['black']['user']['name'] == username) else game['players']['black']['rating']
+
+def get_player_color(game, username):
+    print('Getting player color...')
+    player_color = 'black' if (game['players']['black']['user']['name'] == username) else 'white'
+    print(player_color)
+    return player_color
+
+def get_last_move(game):
+    lastmove = game['moves'].split()[-1]
+    return lastmove
+
+
+def is_player_turn(game, username):
+    print('Checking if is player turn')
+    pgn = io.StringIO(game['moves'])
+    g = chess.pgn.read_game(pgn)
+    board = g.board()
+    for move in g.mainline_moves():
+        board.push(move)
+    print(board.turn)
+    return ((board.turn == chess.WHITE) and get_player_color(game, username) == 'white') or ((board.turn == chess.BLACK) and get_player_color(game, username) == 'black')
+
 
 # LISTS ALL ONGOING GAMES
 def list_ongoing_games(token):
@@ -42,12 +83,12 @@ def list_ongoing_games(token):
     hed = {'Authorization': 'Bearer ' + token}
 
     # REQUEST LIST OF ALL ACTIVE GAMES
-    r = requests.get(url = data.URL_LICHESS_API + data.URL_ACTIVE_GAMES, headers=hed)
+    req = requests.get(url = data.URL_LICHESS_API + data.URL_ACTIVE_GAMES, headers=hed)
+    print(req)
+    r = req.json()
     print(r)
-    data = r.json()
-    print(data)
     
-    return data['nowPlaying']
+    return r['nowPlaying']
     
 # PREPARES RESPONSE FORMAT WITH LISTS OF OPPONENTS
 def get_ongoing_games_opponents_response(ongoing_games_dict):
@@ -103,17 +144,20 @@ def get_ongoing_games_response(ongoing_games):
 
 
 
-def get_game_details_response(game):
-    rsp = (data.DETAILS_IN_SIGLE_GAME_OVERVIEW).format(game['opponent']['username'], game['opponent']['rating'], game['color']) + ((data.DETAILS_IN_SIGLE_GAME_LAST_MOVE).format(game['lastMove']) if game['lastMove'] else '')
+def get_game_details_response(game, username):
+    rsp = (data.DETAILS_IN_SIGLE_GAME_OVERVIEW).format(get_opponent_username(game, username), get_opponent_rating(game, username), get_player_color(game, username)) + ((data.DETAILS_IN_SIGLE_GAME_LAST_MOVE).format(get_last_move(game)))
 
-    return rsp, game['isMyTurn']
+    return rsp, is_player_turn(game, username)
 
 
+# PLACES A MOVE IN ACTIVE GAME
+# TODO: RESIGN
+# TODO: OFFER DRAW
 def place_move(token, game_id, move):
     print('Placing move {} in game {}'.format(move, game_id))
     hed = {'Authorization': 'Bearer ' + token}
     
-    url = data.URL_ACTIVE_GAMES + (data.URL_PLACE_MOVE).format(game_id, move)
+    url = data.URL_LICHESS_API + (data.URL_PLACE_MOVE).format(game_id, move)
     print(url)
     # sending get request and saving the response as response object
     r = (requests.post(url = url, headers=hed)).json()
@@ -123,7 +167,9 @@ def place_move(token, game_id, move):
     
     response = {}
     if r.get('ok'):
-        response = {'status': True, 'message': (data.PLACE_MOVE_SUCCESS).format(move) + data.DETAILS_IN_ANOTHER_GAME_QUESTION}
+        ts = datetime.datetime.now().timestamp()
+        rand = random.Random(int(ts))
+        response = {'status': True, 'message': (data.PLACE_MOVE_SUCCESS).format(move) + rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION)}
         print(response)
         return response
     else:
