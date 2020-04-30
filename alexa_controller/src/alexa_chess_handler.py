@@ -22,7 +22,7 @@ from ask_sdk_model.interfaces.display import (
 from ask_sdk_model import ui, Response
 
 
-from custom_modules import data, games, board, account, ratings
+from custom_modules import utils, data, games, board, account, ratings
 
 
 # Skill Builder object
@@ -73,19 +73,16 @@ class LaunchRequestHandler(AbstractRequestHandler):
             #            rsp = (data.WELCOME_MESSAGE).format(firstname)
             
             username = account.get_username(access_token)
+            attr['username'] = username
+            
             rsp = (data.WELCOME_MESSAGE).format(username)
 
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
-        
-            response_builder.speak(rsp).ask(rand.choice(data.CHOOSE_ACTION))
+            response_builder.speak(rsp).ask(utils.get_random_string_from_list(data.CHOOSE_ACTION))
             return handler_input.response_builder.response
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
             
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -163,11 +160,9 @@ class ListMyTurnOngoingGamesHandler(AbstractRequestHandler):
             response_builder.speak(rsp)
             return response_builder.response
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
-            
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+        
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 '''
 
@@ -186,7 +181,6 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
         user_info = user_info.to_dict()
         
         print(user_info)
-        
         print(handler_input.request_envelope.request.locale)
         
         
@@ -209,11 +203,9 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
             response_builder.speak(rsp_speak).ask(rsp_speak)
             return response_builder.response
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
             
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -275,6 +267,7 @@ class GetGameDetailsHandler(AbstractRequestHandler):
         slots = handler_input.request_envelope.request.intent.slots
         print(slots)
         
+        # TODO: CONFIRM SLOT RECEIVED
         game_number = slots["game_number"].value
         print("game_number = " + str(game_number))
         
@@ -286,41 +279,26 @@ class GetGameDetailsHandler(AbstractRequestHandler):
             access_token = handler_input.request_envelope.session.user.access_token
             
             username = account.get_username(access_token)
+            attr['username'] = username
             print('Getting game details')
             game_details = games.get_game_by_id(access_token, all_ongoing_games[game_number]['gameId'])
             attr['active_game'] = game_details
             
             # BUILD ALEXA RESPONSE
-            rsp, my_turn = games.get_game_details_response(game_details, username)
-            
-            username = account.get_username(access_token)
+            rsp_speak, rsp_card_content, rsp_card_title = games.get_game_details_response(game_details, username)
             board_image = board.get_board_image(game_details, username)
             
-            if my_turn:
-                rsp += data.IS_USER_TURN + data.PLACE_A_MOVE_QUESTION
-                attr['state'] = STATE_PLACE_MOVE
-                response_builder.speak(rsp).ask(rsp)
-            else:
-                ts = datetime.datetime.now().timestamp()
-                rand = random.Random(int(ts))
-            
-                rsp += rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
-                attr['state'] = STATE_ANOTHER_GAME_DETAILS
-                response_builder.speak(rsp).ask(rsp)
-            
-            response_builder.set_card(ui.StandardCard(
-                                                      title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game_details, username)),
-                                                      text = rsp if my_turn else rsp + games.get_ongoing_games_list(all_ongoing_games),
+            attr['state'] = STATE_PLACE_MOVE if games.is_player_turn(game_details, username) else STATE_ANOTHER_GAME_DETAILS
+            response_builder.speak(rsp_speak).ask(rsp_speak).set_card(ui.StandardCard(
+                                                      title = rsp_card_title,
+                                                      text = rsp_card_content if games.is_player_turn(game_details, username) else rsp_card_content + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
                                                       image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
             
             return response_builder.response
             
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
-            
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -337,18 +315,20 @@ class ChooseMoveHandler(AbstractRequestHandler):
         
         attr['state'] = STATE_PLACING_MOVE
         game_details = attr['active_game']
-        board_image = board.get_board_image(game_details['gameId'], game_details['fen'], game_details['color'], game_details['lastMove'])
+        username = attr['username']
+        
+        #username = account.get_username(access_token)
+        board_image = board.get_board_image(game_details, username)
         
         rsp = data.CHOOSE_MOVE_QUESTION
         
         # TODO: PLACE MOVE HISTORY IN CARD
-        response_builder.set_card(ui.StandardCard(
-                                                  title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game, username)),
+        response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
+                                                  title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game_details, username), games.get_opponent_rating(game_details, username)),
                                                   text = rsp,
                                                   image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                                                   
             
-        response_builder.speak(rsp).ask(rsp)
         return response_builder.response
 
 
@@ -364,17 +344,13 @@ class CancelPlaceMoveHandler(AbstractRequestHandler):
         
         all_ongoing_games = attr['all_ongoing_games']
         
-        ts = datetime.datetime.now().timestamp()
-        rand = random.Random(int(ts))
-        
-        rsp = data.OK + rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
+        rsp = data.OK + utils.get_random_string_from_list(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
         attr['state'] = STATE_ANOTHER_GAME_DETAILS
     
-        response_builder.set_card(ui.StandardCard(
+        response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
                                               title = data.ONGOING_GAMES_CARD_TITLE,
                                               text = rsp + games.get_ongoing_games_list(all_ongoing_games)))
         
-        response_builder.speak(rsp).ask(rsp)
         return response_builder.response
 
 
@@ -390,8 +366,9 @@ class PlaceMoveHandler(AbstractRequestHandler):
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
         
-        active_game = attr['active_game']
+        game_details = attr['active_game']
         attr['state'] = STATE_PLACING_MOVE
+        all_ongoing_games = attr['all_ongoing_games']
         
         print('Getting slots...')
         slots = handler_input.request_envelope.request.intent.slots
@@ -408,57 +385,48 @@ class PlaceMoveHandler(AbstractRequestHandler):
         
         if 'access_token' in user_info:
             access_token = handler_input.request_envelope.session.user.access_token
+            username = account.get_username(access_token)
+            attr['username'] = username
             
             # CHECKS IF IT IS PLAYER TURN BEFORE PLACING A MOVE
-            if active_game['isMyTurn']:
-                response = games.place_move(access_token, active_game['gameId'], move)
+            if games.is_player_turn(game_details, username):
+                response = games.place_move(access_token, game_details['id'], move)
                 print(response)
-                rsp = response['message']
                 
-                username = account.get_username(access_token)
-                game = games.get_game_by_id(access_token, active_game['gameId'])
                 
-                rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games)
-                attr['all_ongoing_games'] = all_ongoing_games
                 
-                response_builder.speak(rsp).ask(rsp)
+                game_details = games.get_game_by_id(access_token, game_details['id'])
+                attr['active_game'] = game_details
                 
-                board_image = board.get_board_image(game, username)
+                
+                rsp_speak, rsp_card = get_place_move_response(response)
+                rsp_card_title = games.get_game_details_card_title(game_details, username)
+                board_image = board.get_board_image(game_details, username)
             
-                response_builder.set_card(ui.StandardCard(
-                                                          title = (data.GAME_DETAILS_CARD_TITLE).format(game['opponent']['username']),
-                                                          text = rsp + '\n' + rsp_card,
+                response_builder.speak(rsp_speak).ask(rsp_speak).set_card(ui.StandardCard(
+                                                          title = rsp_card_title,
+                                                          text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
                                                           image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                     
                 return response_builder.response
     
             else:
-                
-                ts = datetime.datetime.now().timestamp()
-                rand = random.Random(int(ts))
         
-                rsp = data.PLACE_MOVE_NOT_YOUR_TURN + rand.choice(data.DETAILS_IN_ANOTHER_GAME_QUESTION)
+                rsp = data.PLACE_MOVE_NOT_YOUR_TURN + utils.get_random_string_from_list(data.DETAILS_IN_ANOTHER_GAME_QUESTION)
+                board_image = board.get_board_image(game_details, username)
+                rsp_card_title = games.get_game_details_card_title(game_details, username)
                 
-                rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games)
-                attr['all_ongoing_games'] = all_ongoing_games
-                
-                response_builder.speak(rsp).ask(rsp)
-                
-                board_image = board.get_board_image(game['gameId'], game['fen'], game['color'], game['lastMove'])
-                
-                response_builder.set_card(ui.StandardCard(
-                                                          title = (data.GAME_DETAILS_CARD_TITLE).format(game['opponent']['username']),
+                response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
+                                                          title = rsp_card_title,
                                                           text = rsp + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
                                                           image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                                                           
                 return response_builder.response
         
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
             
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -492,11 +460,9 @@ class UserRatingHandler(AbstractRequestHandler):
             response_builder.speak(resp_speak)
             return handler_input.response_builder.response
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
             
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
@@ -536,11 +502,9 @@ class UserRatingInSpeedHandler(AbstractRequestHandler):
             return handler_input.response_builder.response
               
         else:
-            ts = datetime.datetime.now().timestamp()
-            rand = random.Random(int(ts))
             
-            print(rand.choice(data.ERROR_ACCESS_TOKEN))
-            response_builder.speak(rand.choice(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERROR_ACCESS_TOKEN)
+            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
             return response_builder.response
 
 
