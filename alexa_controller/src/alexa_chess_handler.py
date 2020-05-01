@@ -470,8 +470,8 @@ class ConfirmResignationHandler(AbstractRequestHandler):
 
             # DEBUG
             print('would send a request to resign game')
-            #response = games.resign_game(access_token, game_details)
-            response = {'status': True, 'message': 'success'}
+            response = games.resign_game(access_token, game_details)
+            #response = {'status': True, 'message': 'success'}
             print(response)
             
             
@@ -543,8 +543,8 @@ class ConfirmOfferDrawHandler(AbstractRequestHandler):
             access_token = handler_input.request_envelope.session.user.access_token
             
             # DEBUG
-            print('would send a offer draw request')
-            #response = games.offer_a_draw(access_token, game_details)
+            #print('would send a offer draw request')
+            response = games.offer_a_draw(access_token, game_details)
             response = {'status': True, 'message': 'success'}
             print(response)
             
