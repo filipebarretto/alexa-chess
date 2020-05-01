@@ -9,12 +9,6 @@ provider:
   profile: alexa-chess-deploy
   
   
-tasks:
-  - name: Import environment variables
-    include_vars:
-      file: ./env.yml
-      name: envs
-      
 custom:
   pythonRequirements:
     dockerizePip: non-linux
@@ -56,8 +50,7 @@ functions:
           - "s3:ListBucket"
         Resource: !Join [ "", [ "arn:aws:s3:::", "${self:custom.board_images_bucket}", "/*" ] ]
     events:
-      - alexaSkill: {{ envs.alexa_endpoint.${self:custom.stage} }}
-#      - alexaSkill: amzn1.ask.skill.d79d3e65-2090-45c3-938a-0c6c7e26071f
+      - alexaSkill: amzn1.ask.skill.d79d3e65-2090-45c3-938a-0c6c7e26071f
           
 
      

@@ -437,7 +437,6 @@ class PlaceMoveHandler(AbstractRequestHandler):
                 return response_builder.response
         
         else:
-            
             print(data.ERRORS['ERROR_ACCESS_TOKEN'])
             response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
@@ -456,23 +455,36 @@ class ConfirmResignationHandler(AbstractRequestHandler):
         locale = handler_input.request_envelope.request.locale
         
         attr['state'] = ''
+        username = attr['username']
         game_details = attr['active_game']
         all_ongoing_games = attr['all_ongoing_games']
         
-        response = games.resign_game(access_token, game_details)
-        print(response)
-        
-        
-        rsp_speak = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR'])) + utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_GAME_QUESTION'])
-        
-        rsp_card = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR']))
-        
-        response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
-                                                  title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
-                                                  text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale)))
+        if 'access_token' in user_info:
+            access_token = handler_input.request_envelope.session.user.access_token
+
+            # DEBUG
+            print('would send a request to resign game')
+            #response = games.resign_game(access_token, game_details)
+            response = {'status': True, 'message': 'success'}
+            print(response)
             
+            
+            rsp_speak = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR'])) + utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_GAME_QUESTION'])
+            
+            rsp_card = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR']))
+            
+            response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
+                                                                          title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
+                                                                          text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale)))
+                
+            return response_builder.response
         
-        return response_builder.response
+        
+        else:
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
+            return response_builder.response
+        
 
 
 class CancelResignationHandler(AbstractRequestHandler):
@@ -708,6 +720,9 @@ sb.add_request_handler(GetGameDetailsHandler())
 sb.add_request_handler(PlaceMoveHandler())
 sb.add_request_handler(CancelPlaceMoveHandler())
 sb.add_request_handler(ChooseMoveHandler())
+sb.add_request_handler(ConfirmResignationHandler())
+sb.add_request_handler(CancelResignationHandler())
+
 
 sb.add_request_handler(UserRatingHandler())
 sb.add_request_handler(UserRatingInSpeedHandler())
@@ -722,3 +737,4 @@ sb.add_global_response_interceptor(ResponseLogger())
 
 # Expose the lambda handler to register in AWS Lambda.
 lambda_handler = sb.lambda_handler()
+
