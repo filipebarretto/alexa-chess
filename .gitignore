@@ -137,3 +137,5 @@ dmypy.json
 customjs/*
 customjs/
 
+# ENVIRONMENT VARIABLES
+env.yml

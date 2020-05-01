@@ -104,7 +104,7 @@
             "Properties": {
               "Code": {
                 "S3Bucket": "456348640761-alexa-chess-dev",
-                "S3Key": "serverless/alexa-chess/dev/1588345425274-2020-05-01T15:03:45.274Z/alexa-chess.zip"
+                "S3Key": "serverless/alexa-chess/dev/1588350165820-2020-05-01T16:22:45.820Z/alexa-chess.zip"
               },
               "FunctionName": "alexa-chess-dev-alexa_chess_handler",
               "Handler": "src/alexa_chess_handler.lambda_handler",
@@ -130,14 +130,14 @@
               "AlexaUnderscorechessUnderscorehandlerLogGroup"
             ]
           },
-          "AlexaUnderscorechessUnderscorehandlerLambdaVersionoGby6GWswLhYtDe6i4iFSC0LlvWLTsAL725osJjDg": {
+          "AlexaUnderscorechessUnderscorehandlerLambdaVersionmFYv7zBI4z7w510nS1BzrUNWqTXOMrMoxd3igBwo4": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaFunction"
               },
-              "CodeSha256": "48C6p18M70G5DKBWMbd0Lj6JHyJqzgkEDp4WB7lhxs8=",
+              "CodeSha256": "2AjO70x5VnTtsGCmJJE1pnkSrMNOIjX/pdYS/39F5Bw=",
               "Description": "Controls Alexa responses for Alexa Chess"
             }
           },
@@ -269,7 +269,7 @@
           "AlexaUnderscorechessUnderscorehandlerLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaVersionoGby6GWswLhYtDe6i4iFSC0LlvWLTsAL725osJjDg"
+              "Ref": "AlexaUnderscorechessUnderscorehandlerLambdaVersionmFYv7zBI4z7w510nS1BzrUNWqTXOMrMoxd3igBwo4"
             }
           }
         }
@@ -326,7 +326,7 @@
         "memory": 128,
         "runtime": "python3.7",
         "vpc": {},
-        "versionLogicalId": "AlexaUnderscorechessUnderscorehandlerLambdaVersionoGby6GWswLhYtDe6i4iFSC0LlvWLTsAL725osJjDg"
+        "versionLogicalId": "AlexaUnderscorechessUnderscorehandlerLambdaVersionmFYv7zBI4z7w510nS1BzrUNWqTXOMrMoxd3igBwo4"
       }
     },
     "resources": {
@@ -357,7 +357,7 @@
     "artifact": "/Users/filipebarretto/Documents/git/alexa-chess/alexa_controller/.serverless/alexa-chess.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/alexa-chess/dev/1588345425274-2020-05-01T15:03:45.274Z",
+    "artifactDirectoryName": "serverless/alexa-chess/dev/1588350165820-2020-05-01T16:22:45.820Z",
     "artifact": "alexa-chess.zip"
   }
 }

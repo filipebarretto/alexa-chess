@@ -38,6 +38,7 @@ STATE_GAME_DETAILS = 'state_game_details'
 STATE_PLACE_MOVE = 'state_place_move'
 STATE_PLACING_MOVE = 'state_placing_move'
 STATE_ANOTHER_GAME_DETAILS = 'state_another_game_details'
+STATE_CONFIRM_RESIGNATION = 'state_confirm_resignation'
 
 
 # Request Handler classes
@@ -225,6 +226,7 @@ class CancelGameDetailsHandler(AbstractRequestHandler):
 
 
 
+# TODO: INCLUDE PROGRESSIVE RESPONSE
 class GetGameDetailsHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_intent_name("get_game_details")(handler_input)
@@ -391,6 +393,11 @@ class PlaceMoveHandler(AbstractRequestHandler):
                     elif special_move == 'O-O-O':
                         response = games.castle_queen_size(access_token, game_details, username)
                         print(response)
+                    elif special_move == 'resign':
+                        attr['state'] = STATE_CONFIRM_RESIGNATION
+                        rsp_speak = utils.get_random_string_from_list(data.I18N[locale]['CONFIRM_RESIGNATION'])
+                        response_builder.speak(rsp_speak).ask(rsp_speak)
+                        return response_builder.response
                     else:
                         print("Unable to identify special move.")
             
@@ -434,6 +441,69 @@ class PlaceMoveHandler(AbstractRequestHandler):
             print(data.ERRORS['ERROR_ACCESS_TOKEN'])
             response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
+
+
+
+class ConfirmResignationHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        attr = handler_input.attributes_manager.session_attributes
+        return is_intent_name("AMAZON.YesIntent")(handler_input) and (attr.get('state') == STATE_CONFIRM_RESIGNATION)
+    
+    def handle(self, handler_input):
+        logger.info("In ConfirmResignationHandler")
+        attr = handler_input.attributes_manager.session_attributes
+        response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
+        
+        attr['state'] = ''
+        game_details = attr['active_game']
+        all_ongoing_games = attr['all_ongoing_games']
+        
+        response = games.resign_game(access_token, game_details)
+        print(response)
+        
+        
+        rsp_speak = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR'])) + utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_GAME_QUESTION'])
+        
+        rsp_card = (utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_SUCCESS']) if response['status'] else utils.get_random_string_from_list(data.I18N[locale]['RESIGNATION_ERROR']))
+        
+        response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
+                                                  title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
+                                                  text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale)))
+            
+        
+        return response_builder.response
+
+
+class CancelResignationHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        attr = handler_input.attributes_manager.session_attributes
+        return is_intent_name("AMAZON.NoIntent")(handler_input) and (attr.get('state') == STATE_CONFIRM_RESIGNATION)
+    
+    def handle(self, handler_input):
+        logger.info("In CancelResignationHandler")
+        attr = handler_input.attributes_manager.session_attributes
+        response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
+        
+        attr['state'] = ''
+        
+        username = attr['username']
+        game_details = attr['active_game']
+        all_ongoing_games = attr['all_ongoing_games']
+        
+        # BUILD ALEXA RESPONSE
+        rsp_speak, rsp_card_content, rsp_card_title = games.get_game_details_response(game_details, username, locale)
+        board_image = board.get_board_image(game_details, username)
+        
+        attr['state'] = STATE_PLACE_MOVE if games.is_player_turn(game_details, username) else STATE_ANOTHER_GAME_DETAILS
+        response_builder.speak(rsp_speak).ask(rsp_speak).set_card(ui.StandardCard(
+                                                                                  title = rsp_card_title,
+                                                                                  text = rsp_card_content if games.is_player_turn(game_details, username) else rsp_card_content + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale),
+                                                                                  image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
+                                                                                      
+        return response_builder.response
+
 
 
 

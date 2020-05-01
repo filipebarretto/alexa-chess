@@ -282,8 +282,6 @@ def place_move(token, game_id, move):
     
     response = {}
     if r.get('ok'):
-        ts = datetime.datetime.now().timestamp()
-        rand = random.Random(int(ts))
         response = {'status': True, 'message': 'success', 'move': move}
         print(response)
         return response
@@ -311,8 +309,6 @@ def castle_king_size(token, game, username):
     
     response = {}
     if r.get('ok'):
-        ts = datetime.datetime.now().timestamp()
-        rand = random.Random(int(ts))
         response = {'status': True, 'message': 'success', 'move': 'O-O'}
         print(response)
         return response
@@ -339,13 +335,32 @@ def castle_queen_size(token, game, username):
     
     response = {}
     if r.get('ok'):
-        ts = datetime.datetime.now().timestamp()
-        rand = random.Random(int(ts))
         response = {'status': True, 'message': 'success', 'move': 'O-O-O'}
         print(response)
         return response
     else:
         response = {'status': False, 'message': r.get('error'), 'move': 'O-O-O'}
+        print(response)
+        return response
+
+
+def resign_game(token, game, username):
+    print('Resigning game {game_id}'.format(game_id=game['id']))
+    hed = {'Authorization': 'Bearer ' + token}
+    
+    url = data.URL_LICHESS_API + (data.URL_RESIGN_GAME).format(game_id=game['id'])
+    print(url)
+    # sending get request and saving the response as response object
+    r = (requests.post(url = url, headers=hed)).json()
+    print(r)
+    
+    response = {}
+    if r.get('ok'):
+        response = {'status': True, 'message': 'success'}
+        print(response)
+        return response
+    else:
+        response = {'status': False, 'message': r.get('error')}
         print(response)
         return response
 
