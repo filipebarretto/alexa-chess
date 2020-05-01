@@ -353,14 +353,27 @@ class PlaceMoveHandler(AbstractRequestHandler):
         slots = handler_input.request_envelope.request.intent.slots
         print(slots)
         
-        orig_square = slots["orig_square"].resolutions.resolutions_per_authority[0].values[0].value.id
-        print("Origin: " +  orig_square)
+        # GET SPECIAL MOVE SLOT IF EXISTS
+        try:
+            special_move = slots["special_move"].resolutions.resolutions_per_authority[0].values[0].value.id
+            print("Special move: " +  special_move)
+        except:
+            print("Unable to get special move")
         
-        dest_square = slots["dest_square"].resolutions.resolutions_per_authority[0].values[0].value.id
-        print("Destination: " +  dest_square)
-        
-        move = orig_square + dest_square
-        print('Moving ' + move)
+        # GET ORIGIN SQUARE SLOT IF EXISTS
+        try:
+            orig_square = slots["orig_square"].resolutions.resolutions_per_authority[0].values[0].value.id
+            print("Origin: " +  orig_square)
+        except:
+            print("Unable to get origin square")
+
+
+        # GET DESTINATION SQUARE SLOT IF EXISTS
+        try:
+            dest_square = slots["dest_square"].resolutions.resolutions_per_authority[0].values[0].value.id
+            print("Destination: " +  dest_square)
+        except:
+            print("Unable to get destination square")
         
         if 'access_token' in user_info:
             access_token = handler_input.request_envelope.session.user.access_token
@@ -369,13 +382,29 @@ class PlaceMoveHandler(AbstractRequestHandler):
             
             # CHECKS IF IT IS PLAYER TURN BEFORE PLACING A MOVE
             if games.is_player_turn(game_details, username):
-                response = games.place_move(access_token, game_details['id'], move)
-                print(response)
+                
+                if special_move:
+                    print("Move is a special move.")
+                    if special_move == 'O-O':
+                        response = games.castle_king_size(access_token, game_details, username)
+                        print(response)
+                    elif special_move == 'O-O-O':
+                        response = games.castle_queen_size(access_token, game_details, username)
+                        print(response)
+                    else:
+                        print("Unable to identify special move.")
+            
+                else:
+                    print("Move is a simple move.")
+                    move = orig_square + dest_square
+                    print('Moving ' + move)
+                    response = games.place_move(access_token, game_details['id'], move)
+                    print(response)
+                
                 
                 game_details = games.get_game_by_id(access_token, game_details['id'])
                 attr['active_game'] = game_details
-                
-                
+
                 rsp_speak, rsp_card = games.get_place_move_response(response, locale, games.get_last_move(game_details))
                 rsp_card_title = games.get_game_details_card_title(game_details, username, locale)
                 board_image = board.get_board_image(game_details, username)
@@ -384,9 +413,9 @@ class PlaceMoveHandler(AbstractRequestHandler):
                                                           title = rsp_card_title,
                                                           text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale),
                                                           image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
-                    
+                        
                 return response_builder.response
-    
+        
             else:
         
                 rsp = utils.get_random_string_from_list(data.I18N[locale]['PLACE_MOVE_NOT_YOUR_TURN']) + utils.get_random_string_from_list(data.I18N[locale]['DETAILS_IN_ANOTHER_GAME_QUESTION'])

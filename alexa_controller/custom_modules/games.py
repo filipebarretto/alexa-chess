@@ -121,10 +121,11 @@ def checks_source_square_conflict(move):
 # EXAMPLE 4: bxc8=Q+ --> pawn b takes on c8, promoting to queen with check.
 def get_move_speak(move, locale):
     print('Getting move speak')
+    
     # CHECKS IF IT IS A CASTELING MOVE OR A PIECE IS TAKEN
     taking_move = 'x' in move
-    
-    move_speak = data.MOVES[locale]['CASTLES_QUEEN_SIDE'] if 'O-O-O' in move else (data.MOVES[locale]['CASTLES_KING_SIDE'] if 'O-O' in move else move.replace('x', ' ' + data.MOVES[locale]['TAKES_ON']))
+    move_speak = move.replace('O-O-O', data.MOVES[locale]['CASTLES_QUEEN_SIDE']).replace('O-O', data.MOVES[locale]['CASTLES_KING_SIDE']).replace('x', ' ' + data.MOVES[locale]['TAKES_ON'])
+
     
     # CHECKS IF MOVE HAS + OR # FOR CHECK AND CHECKMATE TO ADD TO RESPONSE STRING
     move_speak = move_speak.replace('+', data.MOVES[locale]['WITH_CHECK']).replace('#', data.MOVES[locale]['WITH_CHECKMATE'])
@@ -137,7 +138,7 @@ def get_move_speak(move, locale):
         move_speak = move_speak.replace('=', data.MOVES[locale]['PROMOTING_PIECE'])
     
     # CHECKS IF IT IS A PAWN MOVE OR A PIECE MOVE
-    is_pawn_move = not ('K' in move_speak or 'Q' in move_speak or 'R' in move_speak or 'N' in move_speak or 'B' in move_speak)
+    is_pawn_move = not ('K' in move_speak or 'Q' in move_speak or 'R' in move_speak or 'N' in move_speak or 'B' in move_speak or 'O-O-O' in move or 'O-O' in move)
     
     # CHECKS IF THERE ARE MULTIPLE POSSIBLE SOURCE SQUARES TO SPECIFY MOVE
     has_conflict = checks_source_square_conflict(move)
@@ -150,7 +151,7 @@ def get_move_speak(move, locale):
         for code, piece in data.PIECE_CODES.items():
             move_speak = move_speak.replace(code, ' ' + data.PIECES[locale][data.PIECE_CODES[code]] + ' ').replace(has_conflict['conflict'], has_conflict['conflict'][0] + ('' if taking_move else data.MOVES[locale]['TO']) + has_conflict['conflict'][1]) if has_conflict['conflict'] else move_speak.replace(code, ' ' + data.PIECES[locale][data.PIECE_CODES[code]] + ('' if taking_move else data.MOVES[locale]['TO']))
 
-    return move_speak
+    return move_speak + '<break time="0.5s"/>'
 
 
 def get_simple_move_speak(move, locale):
@@ -288,6 +289,63 @@ def place_move(token, game_id, move):
         return response
     else:
         response = {'status': False, 'message': r.get('error'), 'move': move}
+        print(response)
+        return response
+
+
+def castle_king_size(token, game, username):
+    print('Casteling king size in game {}'.format(game['id']))
+    hed = {'Authorization': 'Bearer ' + token}
+    
+    color = get_player_color(game, username)
+    
+    move = 'e1h1' if get_player_color(game, username) == 'white' else 'e8h8'
+    
+    url = data.URL_LICHESS_API + (data.URL_PLACE_MOVE).format(game['id'], move)
+    print(url)
+    # sending get request and saving the response as response object
+    r = (requests.post(url = url, headers=hed)).json()
+    print(r)
+    #data = r.json()
+    #print(data)
+    
+    response = {}
+    if r.get('ok'):
+        ts = datetime.datetime.now().timestamp()
+        rand = random.Random(int(ts))
+        response = {'status': True, 'message': 'success', 'move': 'O-O'}
+        print(response)
+        return response
+    else:
+        response = {'status': False, 'message': r.get('error'), 'move': 'O-O'}
+        print(response)
+        return response
+
+def castle_queen_size(token, game, username):
+    print('Casteling queen size in game {}'.format(game['id']))
+    hed = {'Authorization': 'Bearer ' + token}
+    
+    color = get_player_color(game, username)
+    
+    move = 'e1a1' if get_player_color(game, username) == 'white' else 'e8a8'
+    
+    url = data.URL_LICHESS_API + (data.URL_PLACE_MOVE).format(game['id'], move)
+    print(url)
+    # sending get request and saving the response as response object
+    r = (requests.post(url = url, headers=hed)).json()
+    print(r)
+    #data = r.json()
+    #print(data)
+    
+    response = {}
+    if r.get('ok'):
+        ts = datetime.datetime.now().timestamp()
+        rand = random.Random(int(ts))
+        response = {'status': True, 'message': 'success', 'move': 'O-O-O'}
+        print(response)
+        return response
+    else:
+        response = {'status': False, 'message': r.get('error'), 'move': 'O-O-O'}
         print(response)
         return response
 
