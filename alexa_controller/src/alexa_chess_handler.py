@@ -60,7 +60,9 @@ class LaunchRequestHandler(AbstractRequestHandler):
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
         print(user_info)
-        print(handler_input.request_envelope.request.locale)
+        
+        locale = handler_input.request_envelope.request.locale
+        print(locale)
         # en-US
         
         if 'access_token' in user_info:
@@ -69,20 +71,18 @@ class LaunchRequestHandler(AbstractRequestHandler):
             
             # GETS THE USERNAME FROM LICHESS.ORG
             # TODO: CHECK IF HAS NAME, ELSE USERNAME
-            #            firstname = account.get_username(access_token)
-            #            rsp = (data.WELCOME_MESSAGE).format(firstname)
             
             username = account.get_username(access_token)
             attr['username'] = username
             
-            rsp = (data.WELCOME_MESSAGE).format(username)
+            rsp = (utils.get_random_string_from_list(data.I18N[locale]['WELCOME_MESSAGE'])).format(username)
 
-            response_builder.speak(rsp).ask(utils.get_random_string_from_list(data.CHOOSE_ACTION))
+            response_builder.speak(rsp).ask(utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_ACTION']))
             return handler_input.response_builder.response
         else:
             
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -95,6 +95,7 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         logger.info("In SessionEndedRequestHandler")
+        locale = handler_input.request_envelope.request.locale
         print("Session ended with reason: {}".format(handler_input.request_envelope))
         return handler_input.response_builder.response
 
@@ -108,10 +109,12 @@ class HelpIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         logger.info("In HelpIntentHandler")
+        locale = handler_input.request_envelope.request.locale
         handler_input.attributes_manager.session_attributes = {}
         # Resetting session
         
-        handler_input.response_builder.speak(data.HELP_MESSAGE).ask(data.HELP_MESSAGE)
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['HELP_MESSAGE'])
+        handler_input.response_builder.speak(rsp).ask(rsp)
         return handler_input.response_builder.response
 
 
@@ -126,45 +129,12 @@ class ExitIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         logger.info("In ExitIntentHandler")
-        handler_input.response_builder.speak(
-                                             data.EXIT_SKILL_MESSAGE).set_should_end_session(True)
+        locale = handler_input.request_envelope.request.locale
+        
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['EXIT_SKILL_MESSAGE'])
+        handler_input.response_builder.speak(rsp).set_should_end_session(True)
         return handler_input.response_builder.response
 
-
-
-# LISTS 3 MOST RECENT USER ONGOING GAMES
-'''
-class ListMyTurnOngoingGamesHandler(AbstractRequestHandler):
-    
-    def can_handle(self, handler_input):
-        return (is_intent_name("list_my_turn_ongoing_games")(handler_input))
-    
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        logger.info("In ListMyTurnOngoingGamesHandler")
-        attr = handler_input.attributes_manager.session_attributes
-        response_builder = handler_input.response_builder
-        user_info = handler_input.request_envelope.session.user
-        user_info = user_info.to_dict()
-        
-        print(user_info)
-        
-        if 'access_token' in user_info:
-            access_token = handler_input.request_envelope.session.user.access_token
-            ongoing_games = games.list_ongoing_games(access_token)
-            
-            attr['ongoing_games'] = ongoing_games
-            
-            # BUILD ALEXA RESPONSE
-            rsp = games.build_ongoing_games_response(ongoing_games)
-            response_builder.speak(rsp)
-            return response_builder.response
-        else:
-        
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
-            return response_builder.response
-'''
 
 # LISTS USER'S ONGOING GAMES
 class ListAllOngoingGamesHandler(AbstractRequestHandler):
@@ -179,6 +149,7 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
         response_builder = handler_input.response_builder
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
+        locale = handler_input.request_envelope.request.locale
         
         print(user_info)
         print(handler_input.request_envelope.request.locale)
@@ -191,10 +162,10 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
             ongoing_games = games.list_ongoing_games(access_token)
         
             # BUILD ALEXA RESPONSE FOR ONGOING GAMES
-            rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games)
+            rsp_speak, rsp_card, all_ongoing_games = games.get_ongoing_games_response(ongoing_games, locale)
             
             response_builder.set_card(ui.StandardCard(
-                                                      title = data.ONGOING_GAMES_CARD_TITLE,
+                                                      title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
                                                       text = rsp_card))
                                                       
             attr['all_ongoing_games'] = all_ongoing_games
@@ -204,8 +175,8 @@ class ListAllOngoingGamesHandler(AbstractRequestHandler):
             return response_builder.response
         else:
             
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -219,14 +190,15 @@ class DetailsInAnotherGameHandler(AbstractRequestHandler):
         logger.info("In DetailsInAnotherGameHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
 
         attr['state'] = ''
         all_ongoing_games = attr['all_ongoing_games']
 
-        rsp = data.CHOOSE_GAME_QUESTION
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_GAME_QUESTION'])
         response_builder.set_card(ui.StandardCard(
-                                          title = data.ONGOING_GAMES_CARD_TITLE,
-                                          text = rsp + '\n\n' + games.get_ongoing_games_list(all_ongoing_games)))
+                                          title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
+                                          text = rsp + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale)))
 
         response_builder.speak(rsp).ask(rsp)
         return response_builder.response
@@ -241,11 +213,12 @@ class CancelGameDetailsHandler(AbstractRequestHandler):
         logger.info("In CancelGameDetailsHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
 
         attr['state'] = ''
         all_ongoing_games = attr['all_ongoing_games']
         
-        rsp = data.EXIT_SKILL_MESSAGE
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['EXIT_SKILL_MESSAGE'])
         
         response_builder.speak(rsp)
         return response_builder.response
@@ -262,6 +235,7 @@ class GetGameDetailsHandler(AbstractRequestHandler):
         response_builder = handler_input.response_builder
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
+        locale = handler_input.request_envelope.request.locale
         
         print('Getting slots...')
         slots = handler_input.request_envelope.request.intent.slots
@@ -285,20 +259,20 @@ class GetGameDetailsHandler(AbstractRequestHandler):
             attr['active_game'] = game_details
             
             # BUILD ALEXA RESPONSE
-            rsp_speak, rsp_card_content, rsp_card_title = games.get_game_details_response(game_details, username)
+            rsp_speak, rsp_card_content, rsp_card_title = games.get_game_details_response(game_details, username, locale)
             board_image = board.get_board_image(game_details, username)
             
             attr['state'] = STATE_PLACE_MOVE if games.is_player_turn(game_details, username) else STATE_ANOTHER_GAME_DETAILS
             response_builder.speak(rsp_speak).ask(rsp_speak).set_card(ui.StandardCard(
                                                       title = rsp_card_title,
-                                                      text = rsp_card_content if games.is_player_turn(game_details, username) else rsp_card_content + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
+                                                      text = rsp_card_content if games.is_player_turn(game_details, username) else rsp_card_content + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale),
                                                       image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
             
             return response_builder.response
             
         else:
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -312,6 +286,7 @@ class ChooseMoveHandler(AbstractRequestHandler):
         logger.info("In ChooseMoveHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
         
         attr['state'] = STATE_PLACING_MOVE
         game_details = attr['active_game']
@@ -320,11 +295,13 @@ class ChooseMoveHandler(AbstractRequestHandler):
         #username = account.get_username(access_token)
         board_image = board.get_board_image(game_details, username)
         
-        rsp = data.CHOOSE_MOVE_QUESTION
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['CHOOSE_MOVE_QUESTION'])
+                  
+        rsp_title = (utils.get_random_string_from_list(data.I18N[locale]['GAME_DETAILS_CARD_TITLE']).format(games.get_opponent_username(game_details, username), games.get_opponent_rating(game_details, username)))
         
         # TODO: PLACE MOVE HISTORY IN CARD
         response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
-                                                  title = (data.GAME_DETAILS_CARD_TITLE).format(games.get_opponent_username(game_details, username), games.get_opponent_rating(game_details, username)),
+                                                  title = rsp_title,
                                                   text = rsp,
                                                   image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                                                   
@@ -341,19 +318,20 @@ class CancelPlaceMoveHandler(AbstractRequestHandler):
         logger.info("In CancelPlaceMoveHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
         
         all_ongoing_games = attr['all_ongoing_games']
         
-        rsp = data.OK + utils.get_random_string_from_list(data.DETAILS_IN_ANOTHER_GAME_QUESTION) + '\n\n'
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['OK']) + utils.get_random_string_from_list(data.I18N[locale]['DETAILS_IN_ANOTHER_GAME_QUESTION']) + '\n\n'
         attr['state'] = STATE_ANOTHER_GAME_DETAILS
     
         response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
-                                              title = data.ONGOING_GAMES_CARD_TITLE,
-                                              text = rsp + games.get_ongoing_games_list(all_ongoing_games)))
+                                              title = utils.get_random_string_from_list(data.I18N[locale]['ONGOING_GAMES_CARD_TITLE']),
+                                              text = rsp + games.get_ongoing_games_list(all_ongoing_games, locale)))
         
         return response_builder.response
 
-
+# TODO: Place another move when error
 class PlaceMoveHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_intent_name("place_move")(handler_input)
@@ -365,6 +343,7 @@ class PlaceMoveHandler(AbstractRequestHandler):
         response_builder = handler_input.response_builder
         user_info = handler_input.request_envelope.session.user
         user_info = user_info.to_dict()
+        locale = handler_input.request_envelope.request.locale
         
         game_details = attr['active_game']
         attr['state'] = STATE_PLACING_MOVE
@@ -393,40 +372,38 @@ class PlaceMoveHandler(AbstractRequestHandler):
                 response = games.place_move(access_token, game_details['id'], move)
                 print(response)
                 
-                
-                
                 game_details = games.get_game_by_id(access_token, game_details['id'])
                 attr['active_game'] = game_details
                 
                 
-                rsp_speak, rsp_card = get_place_move_response(response)
-                rsp_card_title = games.get_game_details_card_title(game_details, username)
+                rsp_speak, rsp_card = games.get_place_move_response(response, locale, games.get_last_move(game_details))
+                rsp_card_title = games.get_game_details_card_title(game_details, username, locale)
                 board_image = board.get_board_image(game_details, username)
             
                 response_builder.speak(rsp_speak).ask(rsp_speak).set_card(ui.StandardCard(
                                                           title = rsp_card_title,
-                                                          text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
+                                                          text = rsp_card + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale),
                                                           image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                     
                 return response_builder.response
     
             else:
         
-                rsp = data.PLACE_MOVE_NOT_YOUR_TURN + utils.get_random_string_from_list(data.DETAILS_IN_ANOTHER_GAME_QUESTION)
+                rsp = utils.get_random_string_from_list(data.I18N[locale]['PLACE_MOVE_NOT_YOUR_TURN']) + utils.get_random_string_from_list(data.I18N[locale]['DETAILS_IN_ANOTHER_GAME_QUESTION'])
                 board_image = board.get_board_image(game_details, username)
-                rsp_card_title = games.get_game_details_card_title(game_details, username)
+                rsp_card_title = games.get_game_details_card_title(game_details, username, locale)
                 
                 response_builder.speak(rsp).ask(rsp).set_card(ui.StandardCard(
                                                           title = rsp_card_title,
-                                                          text = rsp + '\n\n' + games.get_ongoing_games_list(all_ongoing_games),
+                                                          text = rsp + '\n\n' + games.get_ongoing_games_list(all_ongoing_games, locale),
                                                           image = ui.Image(small_image_url = board_image, large_image_url = board_image)))
                                                           
                 return response_builder.response
         
         else:
             
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -440,6 +417,7 @@ class UserRatingHandler(AbstractRequestHandler):
         logger.info("In UserRatingHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
         
         attr['state'] = ''
         
@@ -454,15 +432,15 @@ class UserRatingHandler(AbstractRequestHandler):
             resp_speak, resp_card = ratings.get_user_ratings(access_token)
             
             response_builder.set_card(ui.StandardCard(
-                                                      title = data.USER_RATINGS_CARD_TITLE,
+                                                      title = utils.get_random_string_from_list(data.I18N[locale]['USER_RATINGS_CARD_TITLE']),
                                                       text = resp_card))
             
             response_builder.speak(resp_speak)
             return handler_input.response_builder.response
         else:
             
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -474,6 +452,7 @@ class UserRatingInSpeedHandler(AbstractRequestHandler):
         logger.info("In UserRatingHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
         
         attr['state'] = ''
         
@@ -495,7 +474,7 @@ class UserRatingInSpeedHandler(AbstractRequestHandler):
             resp_speak, resp_card = ratings.get_user_ratings_in_speed(access_token, game_speed)
             
             response_builder.set_card(ui.StandardCard(
-                                                      title = (data.RATING_IN_SPEED_CARD_TITLE).format(game_speed),
+                                                      title = utils.get_random_string_from_list((data.I18N[locale]['RATING_IN_SPEED_CARD_TITLE']).format(game_speed)),
                                                       text = resp_card))
                 
             response_builder.speak(resp_speak)
@@ -503,8 +482,8 @@ class UserRatingInSpeedHandler(AbstractRequestHandler):
               
         else:
             
-            print(data.ERROR_ACCESS_TOKEN)
-            response_builder.speak(utils.get_random_string_from_list(data.ERROR_ACCESS_TOKEN_SPEAK))
+            print(data.ERRORS['ERROR_ACCESS_TOKEN'])
+            response_builder.speak(utils.get_random_string_from_list(data.I18N[locale]['ERROR_ACCESS_TOKEN_SPEAK']))
             return response_builder.response
 
 
@@ -519,13 +498,16 @@ class RepeatHandler(AbstractRequestHandler):
         logger.info("In RepeatHandler")
         attr = handler_input.attributes_manager.session_attributes
         response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
+        
         if "recent_response" in attr:
             cached_response_str = json.dumps(attr["recent_response"])
             cached_response = DefaultSerializer().deserialize(
                                                               cached_response_str, Response)
             return cached_response
         else:
-            response_builder.speak(data.FALLBACK_ANSWER).ask(data.FALLBACK_ANSWER)
+            rsp = utils.get_random_string_from_list(data.I18N[locale]['FALLBACK_ANSWER'])
+            response_builder.speak(rsp).ask(rsp)
             
             return response_builder.response
 
@@ -542,8 +524,10 @@ class FallbackIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         logger.info("In FallbackIntentHandler")
-        handler_input.response_builder.speak(
-                                             data.FALLBACK_ANSWER).ask(data.FALLBACK_ANSWER)
+        locale = handler_input.request_envelope.request.locale
+        
+        rsp = utils.get_random_string_from_list(data.I18N[locale]['FALLBACK_ANSWER'])
+        handler_input.response_builder.speak(rsp).ask(rsp)
                                              
         return handler_input.response_builder.response
 
@@ -561,6 +545,7 @@ class CacheResponseForRepeatInterceptor(AbstractResponseInterceptor):
         # type: (HandlerInput, Response) -> None
         session_attr = handler_input.attributes_manager.session_attributes
         session_attr["recent_response"] = response
+        locale = handler_input.request_envelope.request.locale
 
 
 # Exception Handler classes
@@ -575,9 +560,13 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
     def handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> Response
         logger.error(exception, exc_info=True)
-        
-        handler_input.response_builder.speak(data.ERROR_MESSAGE).ask(data.HELP_MESSAGE)
-        
+        response_builder = handler_input.response_builder
+        locale = handler_input.request_envelope.request.locale
+    
+        rsp_error = utils.get_random_string_from_list(data.I18N[locale]['ERROR_MESSAGE'])
+        rsp_help = utils.get_random_string_from_list(data.I18N[locale]['HELP_MESSAGE'])
+        handler_input.response_builder.speak(rsp_error).ask(rsp_help)
+
         attr = handler_input.attributes_manager.session_attributes
         attr["state"] = ""
         
@@ -588,8 +577,8 @@ class RequestLogger(AbstractRequestInterceptor):
     """Log the request envelope."""
     def process(self, handler_input):
         # type: (HandlerInput) -> None
-        logger.info("Request Envelope: {}".format(
-                                                  handler_input.request_envelope))
+        logger.info("Request Envelope: {}".format(handler_input.request_envelope))
+        locale = handler_input.request_envelope.request.locale
 
 
 class ResponseLogger(AbstractResponseInterceptor):
@@ -597,6 +586,7 @@ class ResponseLogger(AbstractResponseInterceptor):
     def process(self, handler_input, response):
         # type: (HandlerInput, Response) -> None
         logger.info("Response: {}".format(response))
+        locale = handler_input.request_envelope.request.locale
 
 
 
