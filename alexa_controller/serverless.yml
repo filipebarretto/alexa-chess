@@ -43,6 +43,9 @@ functions:
           - "logs:PutLogEvents"
         Resource: "arn:aws:logs:*:*:*"
       - Effect: "Allow"
+        Action: "ssm:GetParameter"
+        Resource: arn:aws:ssm:us-east-1:456348640761:parameter/alexa-chess-skill-endpoint-${self:custom.stage}
+      - Effect: "Allow"
         Action:
           - "s3:PutObject"
           - "s3:GetObject"
@@ -50,8 +53,7 @@ functions:
           - "s3:ListBucket"
         Resource: !Join [ "", [ "arn:aws:s3:::", "${self:custom.board_images_bucket}", "/*" ] ]
     events:
-      - alexaSkill: amzn1.ask.skill.d79d3e65-2090-45c3-938a-0c6c7e26071f
-          
+      - alexaSkill: ${ssm:alexa-chess-skill-endpoint-${self:custom.stage}}
 
      
 resources:

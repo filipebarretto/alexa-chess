@@ -377,7 +377,15 @@ class PlaceMoveHandler(AbstractRequestHandler):
             print("Destination: " +  dest_square)
         except:
             print("Unable to get destination square")
-        
+
+
+        # GET PROMOTION PIECE IF IT EXISTS
+        try:
+            promoted_piece = slots["promoted_piece"].resolutions.resolutions_per_authority[0].values[0].value.id
+            print("Promoted Piece: " +  promoted_piece)
+        except:
+            print("Unable to get destination square")
+
         if 'access_token' in user_info:
             access_token = handler_input.request_envelope.session.user.access_token
             username = account.get_username(access_token)
@@ -409,7 +417,8 @@ class PlaceMoveHandler(AbstractRequestHandler):
             
                 else:
                     print("Move is a simple move.")
-                    move = orig_square + dest_square
+                    
+                    move = orig_square + dest_square + (promoted_piece.lower() if promoted_piece else '')
                     print('Moving ' + move)
                     response = games.place_move(access_token, game_details['id'], move)
                     print(response)
